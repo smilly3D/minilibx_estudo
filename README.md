@@ -45,3 +45,4 @@ Dica: se algo der `Segmentation fault`, o caminho mais rápido é conferir se vo
 - Para keysyms: inclua `<X11/keysym.h>` e compare com `XK_Escape`, `XK_space`, etc.
 - Para eventos/máscaras: inclua `<X11/X.h>` (ex.: `KeyPress`, `KeyPressMask`, `DestroyNotify`).
 # minilibx_estudo
+# minilibx_estudo
