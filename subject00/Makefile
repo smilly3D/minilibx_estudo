@@ -1,9 +1,11 @@
 NAME := subject00
 CC := gcc
-CFLAGS := -Wall -Wextra -Werror -O3 -I../minilibx-linux
+CFLAGS := -Wall -Wextra -Werror -O3 -I.. -I../minilibx-linux
 
 SRC := subject00.c
 OBJ := $(SRC:.c=.o)
+
+DEPS := ../subject.h
 
 LDFLAGS := -L../minilibx-linux -lmlx -lXext -lX11 -lm -lbsd
 
@@ -14,6 +16,9 @@ mlx:
 
 $(NAME): $(OBJ)
 	$(CC) $(OBJ) $(LDFLAGS) -o $(NAME)
+
+%.o: %.c $(DEPS)
+	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
 	rm -f $(OBJ)
