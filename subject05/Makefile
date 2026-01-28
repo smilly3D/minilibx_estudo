@@ -1,16 +1,16 @@
 NAME := subject05
-CC := gcc
-CFLAGS := -Wall -Wextra -Werror -O3 -I../minilibx-linux
+CC := cc
+CFLAGS := -Wall -Wextra -Werror -O3 -DGL_SILENCE_DEPRECATION -I../minilibx_opengl_20191021
 
 SRC := subject05.c
 OBJ := $(SRC:.c=.o)
 
-LDFLAGS := -L../minilibx-linux -lmlx -lXext -lX11 -lm -lbsd
+LDFLAGS := -L../minilibx_opengl_20191021 -lmlx -framework OpenGL -framework AppKit
 
 all: mlx $(NAME)
 
 mlx:
-	$(MAKE) -C ../minilibx-linux
+	$(MAKE) -C ../minilibx_opengl_20191021
 
 $(NAME): $(OBJ)
 	$(CC) $(OBJ) $(LDFLAGS) -o $(NAME)

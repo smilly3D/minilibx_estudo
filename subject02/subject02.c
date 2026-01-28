@@ -1,6 +1,5 @@
-#include "../minilibx-linux/mlx.h"
-#include <X11/X.h>
-#include <X11/keysym.h>
+#include "../minilibx_opengl_20191021/mlx.h"
+#include "../mlx_macos.h"
 #include <stdlib.h>
 
 typedef struct s_img
@@ -47,12 +46,7 @@ static int	app_destroy(t_app *app)
 	if (app->win)
 		mlx_destroy_window(app->mlx, app->win);
 	app->win = NULL;
-	if (app->mlx)
-	{
-		mlx_destroy_display(app->mlx);
-		free(app->mlx);
-		app->mlx = NULL;
-	}
+	app->mlx = NULL;
 	exit(EXIT_SUCCESS);
 	return (0);
 }
