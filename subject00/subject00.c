@@ -112,11 +112,15 @@ static void update_rect(t_data *d)
     // Colisão com esquerda/direita
     if (d->rx < 0)
     {
+		 d->rw += 1;
+        d->rh += 1;
         d->rx = 0;
         d->vx = -d->vx;
     }
     else if (d->rx + d->rw > d->w)
     {
+		d->rw += 1;
+        d->rh += 1;
         d->rx = d->w - d->rw;
         d->vx = -d->vx;
     }
@@ -124,11 +128,15 @@ static void update_rect(t_data *d)
     // Colisão com topo/base
     if (d->ry < 0)
     {
+		d->rw += 1;
+        d->rh += 1;
         d->ry = 0;
         d->vy = -d->vy;
     }
     else if (d->ry + d->rh > d->h)
     {
+		        d->rw += 1;
+        d->rh += 1;
         d->ry = d->h - d->rh;
         d->vy = -d->vy;
     }
@@ -144,21 +152,32 @@ static int loop_hook(void *param)
     return (0);
 }
 
+int close_win(void *param)
+{
+    t_data  *d = (t_data *)param;
+
+    mlx_destroy_window(d->mlx, d->win);
+    exit(0);
+    return (0);
+}
+
 int key_press_vel(int keycode, void *param)
 {
     t_data  *d = (t_data *)param;
     //vx
-    if (keycode == 65361)
-        d->vx -= 1; // esquerda
-    if (keycode == 65363)
-        d->vx += 1; // direita
-
+    if (keycode == XK_Left && d->vx > 0)
+        d->vx -= 10; // esquerda
+    if (keycode == XK_Right && d->vx < d->w )
+        d->vx += 10; // direita
     //vy    
-    if (keycode == 65362)
-        d->vy += 1;  // cima
-    if (keycode == 65364)
-        d->vy -= 1;  // baixo
+    if (keycode == XK_Up && d->vy < d->h)
+        d->vy += 10;  // cima
+    if (keycode == XK_Down && d->vy > 0)
+        d->vy -= 10;  // baixo
 
+	if (keycode == XK_Escape)
+		close_win(d);
+	
     return (0);
 }
 
@@ -180,14 +199,17 @@ int mouse_scroll_size(int button, int x, int y, void *param)
     return (0);
 }
 
-int close_win(void *param)
-{
-    t_data  *d = (t_data *)param;
+// int key_press_vel(int keycode, void *param)
+// {
+//     t_data *d = (t_data *)param;
 
-    mlx_destroy_window(d->mlx, d->win);
-    exit(0);
-    return (0);
-}
+//     printf("keycode: %d\n", keycode);
+
+//     if (keycode == 65307)
+//         close_win(d);
+
+//     return (0);
+// }
 
 int main(void)
 {
