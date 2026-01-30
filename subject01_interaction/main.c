@@ -1,16 +1,5 @@
 #include "../subject.h"
 
-// Key codes for macOS
-#define K_ESC 53
-#define K_UP 126
-#define K_DOWN 125
-#define K_LEFT 123
-#define K_RIGHT 124
-
-// Mouse codes for macOS
-#define M_SCROLL_UP 4
-#define M_SCROLL_DOWN 5
-
 static void my_mlx_pixel_put(t_data *d, int x, int y, int color)
 {
     char    *dst;
@@ -25,6 +14,8 @@ static void my_mlx_pixel_put(t_data *d, int x, int y, int color)
     *(unsigned int *)dst = color;
 }
 
+// A função mandelbrot_iters agora retorna 'int'
+// e não precisa dos ponteiros de saída zr_out e zi_out
 int mandelbrot_iters(double cr, double ci, int max_iter)
 {
     double zr = 0, zi = 0;
@@ -41,7 +32,8 @@ int mandelbrot_iters(double cr, double ci, int max_iter)
     return i;
 }
 
-
+// A função color_from_iter não precisa mais do ponteiro para t_data
+// nem dos valores de zr e zi
 int color_from_iter(int i, int max)
 {
     if (i == max) return 0x00000000;
@@ -61,7 +53,9 @@ static void render_fractal(t_data *d)
         {
             double cr = (x - d->w/2.0) * scale / d->zoom + d->shift_x;
             double ci = (y - d->h/2.0) * scale / d->zoom + d->shift_y;
+            // Chamada atualizada para mandelbrot_iters
             int it = mandelbrot_iters(cr, ci, d->max_iter);
+            // Chamada atualizada para color_from_iter
             int color = color_from_iter(it, d->max_iter);
             my_mlx_pixel_put(d, x, y, color);
             x++;
@@ -92,33 +86,16 @@ int close_win(void *param)
     return (0);
 }
 
-static int key_hook(int keycode, t_data *d)
-{
-	if (keycode == K_ESC)
-		close_win(d);
-	if (keycode == K_UP)
-		d->shift_y -= 0.1 / d->zoom;
-	if (keycode == K_DOWN)
-		d->shift_y += 0.1 / d->zoom;
-	if (keycode == K_LEFT)
-		d->shift_x -= 0.1 / d->zoom;
-	if (keycode == K_RIGHT)
-		d->shift_x += 0.1 / d->zoom;
-	d->dirty = 1;
-	return (0);
-}
+// TODO: Crie a função 'key_hook' aqui.
+// Ela deve receber um 'keycode' e um ponteiro para 't_data'.
+// Use as setas para mudar 'shift_x' e 'shift_y'.
+// Use ESC para chamar 'close_win'.
+// Lembre-se de setar 'd->dirty = 1' após qualquer mudança.
 
-static int mouse_hook(int button, int x, int y, t_data *d)
-{
-	(void)x;
-	(void)y;
-	if (button == M_SCROLL_UP)
-		d->zoom *= 1.1;
-	if (button == M_SCROLL_DOWN)
-		d->zoom /= 1.1;
-	d->dirty = 1;
-	return (0);
-}
+// TODO: Crie a função 'mouse_hook' aqui.
+// Ela deve receber 'button', 'x', 'y' e um ponteiro para 't_data'.
+// Use o scroll up/down para aumentar/diminuir o 'zoom'.
+// Lembre-se de setar 'd->dirty = 1'.
 
 int main(void)
 {
@@ -149,9 +126,8 @@ int main(void)
     if (!d.addr)
         return (1);
 
-   mlx_hook(d.win, 17, 0, close_win, &d);
-   mlx_key_hook(d.win, key_hook, &d);
-   mlx_mouse_hook(d.win, mouse_hook, &d);
+    mlx_hook(d.win, 17, 0, close_win, &d);
+    // TODO: Conecte os seus novos hooks aqui usando mlx_key_hook e mlx_mouse_hook.
     
     mlx_loop_hook(d.mlx, loop_hook, &d);
     mlx_loop(d.mlx);

@@ -1,17 +1,17 @@
+
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   main.c                                             :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: smilly <smilly@student.42.fr>              +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/01/29 10:00:00 by AI                #+#    #+#             */
+/*   Updated: 2026/01/29 10:00:00 by AI               ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../subject.h"
-#include <math.h>
-
-// Key codes for macOS
-#define K_ESC 53
-#define K_UP 126
-#define K_DOWN 125
-#define K_LEFT 123
-#define K_RIGHT 124
-#define K_C 8
-
-// Mouse codes for macOS
-#define M_SCROLL_UP 4
-#define M_SCROLL_DOWN 5
 
 static void my_mlx_pixel_put(t_data *d, int x, int y, int color)
 {
@@ -27,7 +27,7 @@ static void my_mlx_pixel_put(t_data *d, int x, int y, int color)
     *(unsigned int *)dst = color;
 }
 
-int mandelbrot_iters(double cr, double ci, int max_iter, double *zr_out, double *zi_out)
+int mandelbrot_iters(double cr, double ci, int max_iter)
 {
     double zr = 0, zi = 0;
     int i = 0;
@@ -40,26 +40,14 @@ int mandelbrot_iters(double cr, double ci, int max_iter, double *zr_out, double 
             break;
         i++;
     }
-    *zr_out = zr;
-    *zi_out = zi;
     return i;
 }
 
-// Smooth coloring algorithm
-int color_from_iter(int i, int max, t_data *d, double zr, double zi)
+
+int color_from_iter(int i, int max)
 {
-    if (i == max)
-        return (0x000000); // Black for points inside the set
-
-    // Smooth the iteration count
-    double smooth_i = i + 1 - log(log(sqrt(zr*zr + zi*zi))) / log(2.0);
-
-    // Create psychedelic colors using sine waves
-    int r = (int)(sin(0.1 * smooth_i + d->color_shift) * 127 + 128);
-    int g = (int)(sin(0.1 * smooth_i + d->color_shift + 2) * 127 + 128);
-    int b = (int)(sin(0.1 * smooth_i + d->color_shift + 4) * 127 + 128);
-
-    return (r << 16) | (g << 8) | b;
+    if (i == max) return 0x00000000;
+    return (i * 255 / max) << 16; // gradiente no vermelho
 }
 
 static void render_fractal(t_data *d)
@@ -75,11 +63,8 @@ static void render_fractal(t_data *d)
         {
             double cr = (x - d->w/2.0) * scale / d->zoom + d->shift_x;
             double ci = (y - d->h/2.0) * scale / d->zoom + d->shift_y;
-            
-            double zr, zi;
-            int it = mandelbrot_iters(cr, ci, d->max_iter, &zr, &zi);
-            int color = color_from_iter(it, d->max_iter, d, zr, zi);
-
+            int it = mandelbrot_iters(cr, ci, d->max_iter);
+            int color = color_from_iter(it, d->max_iter);
             my_mlx_pixel_put(d, x, y, color);
             x++;
         }
@@ -103,39 +88,10 @@ static int loop_hook(void *param)
 int close_win(void *param)
 {
     t_data  *d = (t_data *)param;
+
     mlx_destroy_window(d->mlx, d->win);
     exit(0);
     return (0);
-}
-
-static int key_hook(int keycode, t_data *d)
-{
-	if (keycode == K_ESC)
-		close_win(d);
-	if (keycode == K_UP)
-		d->shift_y -= 0.1 / d->zoom;
-	if (keycode == K_DOWN)
-		d->shift_y += 0.1 / d->zoom;
-	if (keycode == K_LEFT)
-		d->shift_x -= 0.1 / d->zoom;
-	if (keycode == K_RIGHT)
-		d->shift_x += 0.1 / d->zoom;
-    if (keycode == K_C)
-        d->color_shift += 0.5;
-	d->dirty = 1;
-	return (0);
-}
-
-static int mouse_hook(int button, int x, int y, t_data *d)
-{
-	(void)x;
-	(void)y;
-	if (button == M_SCROLL_UP)
-		d->zoom *= 1.1;
-	if (button == M_SCROLL_DOWN)
-		d->zoom /= 1.1;
-	d->dirty = 1;
-	return (0);
 }
 
 int main(void)
@@ -148,14 +104,13 @@ int main(void)
 	d.shift_x = -0.5;
 	d.shift_y = 0.0;
 	d.max_iter = 50;
-    d.color_shift = 0.0;
 	d.dirty = 1;
 
     d.mlx = mlx_init();
     if (!d.mlx)
         return (1);
 
-    d.win = mlx_new_window(d.mlx, d.w, d.h, "Subject 02 - Colors");
+    d.win = mlx_new_window(d.mlx, d.w, d.h, "Subject 00 - Base Fractal");
     if (!d.win)
         return (1);
 
@@ -169,8 +124,6 @@ int main(void)
         return (1);
 
    mlx_hook(d.win, 17, 0, close_win, &d);
-   mlx_key_hook(d.win, key_hook, &d);
-   mlx_mouse_hook(d.win, mouse_hook, &d);
     
     mlx_loop_hook(d.mlx, loop_hook, &d);
     mlx_loop(d.mlx);

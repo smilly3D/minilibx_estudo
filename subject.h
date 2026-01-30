@@ -43,6 +43,7 @@ typedef struct s_data {
 	double julia_im;
 
 	int dirty;			// flag: precisa redesenhar
+	double color_shift;	// deslocamento para mudar as cores
 } t_data;
 
 #endif
