@@ -6,23 +6,13 @@
 /*   By: smilly <smilly@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/24 20:12:26 by smilly            #+#    #+#             */
-/*   Updated: 2026/01/24 21:58:24 by smilly           ###   ########.fr       */
+/*   Updated: 2026/01/26 12:06:08 by smilly           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <mlx.h>
 #include <unistd.h>
-
-typedef struct	s_data
-{
-	void	*img;
-	void	*addr;
-	int		bits_per_pixel;
-	int		line_length;
-	int		width;
-	int		height;
-	int		endian;
-}			t_data;
+#include "../subject.h"
 
 void	my_mlx_pixel_put(t_data *data, int x, int y, int color)
 {
@@ -40,11 +30,11 @@ int	main(void)
 	int i;
 
 	i = 0;
-	img.width = 800;
-	img.height = 800;
+	img.w = 800;
+	img.h = 800;
 	mlx = mlx_init();
-	mlx_win = mlx_new_window(mlx, img.width, img.height, "hellow world!");
-	img.img = mlx_new_image(mlx, img.width, img.height);
+	mlx_win = mlx_new_window(mlx, img.w, img.h, "hellow world!");
+	img.img = mlx_new_image(mlx, img.w, img.h);
 	img.addr = mlx_get_data_addr(img.img, &img.bits_per_pixel, 
 			&img.line_length, &img.endian);
 	while(i < 810)
