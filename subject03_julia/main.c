@@ -5,12 +5,13 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: smilly <smilly@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/01/30 16:33:49 by smilly            #+#    #+#             */
-/*   Updated: 2026/01/30 17:51:23 by smilly           ###   ########.fr       */
+/*   Created: 2026/01/30 20:01:32 by smilly            #+#    #+#             */
+/*   Updated: 2026/01/30 20:10:08 by smilly           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../subject.h"
+#include <math.h>
 
 static void	my_mlx_pixel_put(t_data *d, int x, int y, int color)
 {
@@ -26,61 +27,67 @@ static void	my_mlx_pixel_put(t_data *d, int x, int y, int color)
 	*(unsigned int *)dst = color;
 }
 
-// A função mandelbrot_iters agora retorna 'int'
-// e não precisa dos ponteiros de saída zr_out e zi_out
-int	mandelbrot_iters(double cr, double ci, int max_iter)
+int	julia_iters(t_data *d, double zr, double zi,
+					double *zr_out, double *zi_out)
 {
-	double	zr;
-	double	zi;
 	int		i;
 	double	zr2;
 	double	zi2;
 
-	zr = 0;
-	zi = 0;
 	i = 0;
-	while (i < max_iter)
+	while (i < d->max_iter)
 	{
-		zr2 = zr * zr - zi * zi + cr;
-		zi2 = 2 * zr * zi + ci;
+		zr2 = zr * zr - zi * zi + d->julia_re;
+		zi2 = 2 * zr * zi + d->julia_im;
 		zr = zr2;
 		zi = zi2;
 		if (zr * zr + zi * zi > 4.0)
 			break ;
 		i++;
 	}
+	*zr_out = zr;
+	*zi_out = zi;
 	return (i);
 }
 
-// A função color_from_iter não precisa mais do ponteiro para t_data
-// nem dos valores de zr e zi
-int	color_from_iter(int i, int max)
+// Smooth coloring algorithm
+int	color_from_iter(int i, int max, t_data *d, double zr, double zi)
 {
+	double	smooth_i;
+	int		r;
+	int		g;
+	int		b;
+
 	if (i == max)
-		return (0x00000000);
-	return ((i * 255 / max) << 16);
+		return (0x000000);
+
+	smooth_i = i + 1 - log(log(sqrt(zr * zr + zi * zi))) / log(2.0);
+
+	r = (int)(sin(0.1 * smooth_i + d->color_shift) * 127 + 128);
+	g = (int)(sin(0.1 * smooth_i + d->color_shift + 2) * 127 + 128);
+	b = (int)(sin(0.1 * smooth_i + d->color_shift + 4) * 127 + 128);
+
+	return ((r << 16) | (g << 8) | b);
 }
 
-static void	render_fractal(t_data *d)
+static void render_fractal(t_data *d)
 {
-	int		x;
-	int		y;
-	double	scale;
-	double	cr;
-	double	ci;
+	int x, y;
+	double scale = 4.0 / (double)(d->w < d->h ? d->w : d->h);
 
-
-	scale = 4.0 / (double)(d->w < d->h ? d->w : d->h);
 	y = 0;
 	while (y < d->h)
 	{
 		x = 0;
 		while (x < d->w)
 		{
-			cr = (x - d->w / 2.0) * scale / d->zoom + d->shift_x;
-			ci = (y - d->h / 2.0) * scale / d->zoom + d->shift_y;
-			int it = mandelbrot_iters(cr, ci, d->max_iter);
-			int color = color_from_iter(it, d->max_iter);
+			double zr_init = (x - d->w/2.0) * scale / d->zoom + d->shift_x;
+			double zi_init = (y - d->h/2.0) * scale / d->zoom + d->shift_y;
+			
+			double zr_out, zi_out;
+			int it = julia_iters(d, zr_init, zi_init, &zr_out, &zi_out);
+			int color = color_from_iter(it, d->max_iter, d, zr_out, zi_out);
+
 			my_mlx_pixel_put(d, x, y, color);
 			x++;
 		}
@@ -92,7 +99,7 @@ static int	loop_hook(void *param)
 {
 	t_data	*d;
 
-	d = param;
+	d = (t_data *)param;
 	if (d->dirty)
 	{
 		render_fractal(d);
@@ -112,63 +119,63 @@ int	close_win(void *param)
 	return (0);
 }
 
-// TODO: Crie a função 'key_hook' aqui.
-// Ela deve receber um 'keycode' e um ponteiro para 't_data'.
-// Use as setas para mudar 'shift_x' e 'shift_y'.
-// Use ESC para chamar 'close_win'.
-// Lembre-se de setar 'd->dirty = 1' após qualquer mudança.
-int key_hook(int keycode, void *param)
+static int	key_hook(int keycode, t_data *d)
 {
-	t_data *d = (t_data *)param;
-	
-	if (keycode == XK_Escape)
+	if (keycode == KEY_ESC)
 		close_win(d);
-	if (keycode == XK_Left)
-		d->shift_x += 0.1 / d->zoom;
-	if (keycode == XK_Right)
-		d->shift_x -= 0.1 / d->zoom;
-	if (keycode == XK_Down)
-		d->shift_y += 0.1 / d->zoom;
-	if (keycode == XK_Up)
+	if (keycode == KEY_UP)
 		d->shift_y -= 0.1 / d->zoom;
+	if (keycode == KEY_DOWN)
+		d->shift_y += 0.1 / d->zoom;
+	if (keycode == KEY_LEFT)
+		d->shift_x -= 0.1 / d->zoom;
+	if (keycode == KEY_RIGHT)
+		d->shift_x += 0.1 / d->zoom;
+	if (keycode == KEY_C)
+		d->color_shift += 0.5;
 	d->dirty = 1;
 	return (0);
 }
 
-// TODO: Crie a função 'mouse_hook' aqui.
-// Ela deve receber 'button', 'x', 'y' e um ponteiro para 't_data'.
-// Use o scroll up/down para aumentar/diminuir o 'zoom'.
-// Lembre-se de setar 'd->dirty = 1'.
-int	mouse_hook(int button, int x, int y, void *param)
+static int	mouse_hook(int button, int x, int y, t_data *d)
 {
-	t_data *d = (t_data *)param;
 	(void)x;
 	(void)y;
-	if(button == 4)
+	if (button == SCROLL_UP)
 		d->zoom *= 1.1;
-	if(button == 5)
+	if (button == SCROLL_DOWN)
 		d->zoom /= 1.1;
 	d->dirty = 1;
 	return (0);
 }
 
-int	main(void)
+int main(void)
 {
 	t_data	d;
 
 	d.w = 800;
 	d.h = 800;
 	d.zoom = 1.0;
-	d.shift_x = -0.5;
+	d.shift_x = 0.0;
 	d.shift_y = 0.0;
-	d.max_iter = 50;
+	d.max_iter = 100;
+	d.color_shift = 0.0;
 	d.dirty = 1;
+
+	// Interesting Julia constants
+	// d.julia_re = -0.7269;
+	// d.julia_im = 0.1889;
+	d.julia_re = -0.8;
+	d.julia_im = 0.156;
+	// d.julia_re = 0.285;
+	// d.julia_im = 0.01;
+	
 
 	d.mlx = mlx_init();
 	if (!d.mlx)
 		return (1);
 
-	d.win = mlx_new_window(d.mlx, d.w, d.h, "Subject 01 - Interaction");
+	d.win = mlx_new_window(d.mlx, d.w, d.h, "Subject 03 - Julia");
 	if (!d.win)
 		return (1);
 
@@ -182,10 +189,8 @@ int	main(void)
 		return (1);
 
 	mlx_hook(d.win, 17, 0, close_win, &d);
-	// TODO: Conecte os seus novos hooks aqui usando mlx_key_hook e mlx_mouse_hook.
 	mlx_key_hook(d.win, key_hook, &d);
 	mlx_mouse_hook(d.win, mouse_hook, &d);
-
 
 	mlx_loop_hook(d.mlx, loop_hook, &d);
 	mlx_loop(d.mlx);

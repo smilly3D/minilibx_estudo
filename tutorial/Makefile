@@ -1,6 +1,7 @@
 NAME := tutorial
 CC := cc
-CFLAGS := -Wall -Wextra -Werror -O3 -DGL_SILENCE_DEPRECATION -I../minilibx_opengl_20191021
+# CFLAGS := -Wall -Wextra -Werror -O3 -DGL_SILENCE_DEPRECATION -I../minilibx_opengl_20191021
+CFLAGS := -Wall -Wextra -Werror -O3 -DGL_SILENCE_DEPRECATION -I../minilibx-linux
 
 SRC := tutorial.c
 OBJ := $(SRC:.c=.o)

@@ -43,7 +43,6 @@ int mandelbrot_iters(double cr, double ci, int max_iter)
     return i;
 }
 
-
 int color_from_iter(int i, int max)
 {
     if (i == max) return 0x00000000;
@@ -101,7 +100,7 @@ int main(void)
     d.w = 800;
     d.h = 800;
 	d.zoom = 1.0;
-	d.shift_x = -0.5;
+	d.shift_x = 0.0;
 	d.shift_y = 0.0;
 	d.max_iter = 50;
 	d.dirty = 1;
